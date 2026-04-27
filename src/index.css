@@ -1,0 +1,36 @@
+@import url('https://fonts.googleapis.com/css2?family=Dancing+Script:wght@700&family=Montserrat:wght@400;700;900&display=swap');
+@import "tailwindcss";
+
+@theme {
+  --font-sans: "Montserrat", sans-serif;
+  --font-serif: "Dancing Script", cursive;
+  --color-barbie-pink: #FF1493;
+  --color-barbie-bg: #FF85C1;
+  --color-glass-white: rgba(255, 255, 255, 0.6);
+}
+
+@layer base {
+  body {
+    @apply bg-rose-300 font-sans min-h-screen text-gray-900;
+  }
+}
+
+@layer utilities {
+  .barbie-title {
+    font-family: var(--font-serif);
+    text-shadow: 3px 3px 0px #FF1493, 6px 6px 0px rgba(0,0,0,0.1);
+  }
+  .glass-pink {
+    background: var(--color-glass-white);
+    backdrop-filter: blur(10px);
+    border: 2px solid rgba(255, 20, 147, 0.3);
+  }
+  .glitter-button {
+    background: linear-gradient(45deg,#FF69B4,#FF1493,#FF69B4);
+    background-size: 200% 200%;
+    box-shadow: 0 0 15px rgba(255,105,180,0.6);
+  }
+  .animate-spin-slow { animation: spin 5s linear infinite; }
+  .animate-spin-slow-reverse { animation: spin 5s linear infinite reverse; }
+  @keyframes spin { from { transform: rotate(0deg); } to { transform: rotate(360deg); } }
+}
