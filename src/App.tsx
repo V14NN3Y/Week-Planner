@@ -5,7 +5,7 @@ import StarBackground from './components/StarBackground';
 import { getSupabase } from './services/supabaseClient';
 
 type Priority = 'haute' | 'moyenne' | 'basse';
-type Task = { id: string; text: string; priority: Priority; completed: boolean; day: string };
+type Task = { id: string; text: string; priority: Priority; completed: boolean; day: string; order_index: number };
 type Week = Record<string, Task[]>;
 
 const days = ['Lundi', 'Mardi', 'Mercredi', 'Jeudi', 'Vendredi'];
@@ -29,7 +29,7 @@ export default function App() {
       setLoading(false);
       return;
     }
-    const { data, error } = await supabase.from('tasks').select('*');
+    const { data, error } = await supabase.from('tasks').select('*').order('order_index', { ascending: true });
     if (error) {
       console.error('Error fetching tasks:', error);
     } else {
@@ -46,7 +46,13 @@ export default function App() {
     const supabase = getSupabase();
     if (!supabase) return;
 
-    const newTask = { text: taskInfo.text, priority: taskInfo.priority || 'moyenne', completed: false, day };
+    const newTask = { 
+      text: taskInfo.text, 
+      priority: taskInfo.priority || 'moyenne', 
+      completed: false, 
+      day,
+      order_index: planner[day].length // Prends la dernière position
+    };
     const { data, error } = await supabase.from('tasks').insert([newTask]).select().single();
 
     if (error) {
@@ -139,15 +145,24 @@ export default function App() {
 
       const [movedTask] = sourceTasks.splice(sourceIndex, 1);
       const updatedTask = sourceDay !== destDay ? { ...movedTask, day: destDay } : movedTask;
+      
+      destTasks.splice(destIndex, 0, updatedTask);
 
-      if (sourceDay !== destDay) {
-        const supabase = getSupabase();
-        if (supabase) {
-          supabase.from('tasks').update({ day: destDay }).eq('id', updatedTask.id).then();
+      // Sauvegarder les nouvelles positions
+      const supabase = getSupabase();
+      if (supabase) {
+        // Mettre à jour la colonne de destination
+        destTasks.forEach((t, i) => {
+          supabase.from('tasks').update({ day: destDay, order_index: i }).eq('id', t.id).then();
+        });
+        
+        // Mettre à jour la colonne source si elle est différente
+        if (sourceDay !== destDay) {
+          sourceTasks.forEach((t, i) => {
+            supabase.from('tasks').update({ order_index: i }).eq('id', t.id).then();
+          });
         }
       }
-
-      destTasks.splice(destIndex, 0, updatedTask);
 
       return {
         ...newPlanner,
